@@ -5,9 +5,11 @@
     <div :class="{hasTagsView:needTagsView}" class="main-container">
       <div :class="{'fixed-header':fixedHeader}">
         <navbar />
-        <tags-view v-if="needTagsView" />
+        <!-- <tags-view v-if="needTagsView" /> -->
       </div>
-      <app-main />
+      <router-view :key="key" />
+
+      <!-- <app-main /> -->
       <right-panel v-if="showSettings">
         <settings />
       </right-panel>
@@ -17,7 +19,7 @@
 
 <script>
 import RightPanel from '@/components/RightPanel'
-import { AppMain, Navbar, Settings, Sidebar, TagsView } from './components'
+import { AppMain, Navbar, Settings, Sidebar } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
 import { mapState } from 'vuex'
 
@@ -29,8 +31,9 @@ export default {
     RightPanel,
     Settings,
     Sidebar,
-    TagsView
+    // TagsView
   },
+
   mixins: [ResizeMixin],
   computed: {
     ...mapState({
@@ -40,6 +43,9 @@ export default {
       needTagsView: state => state.settings.tagsView,
       fixedHeader: state => state.settings.fixedHeader
     }),
+    key() {
+      return this.$route.fullPath; // 使用 fullPath 包括查询参数
+    },
     classObj() {
       return {
         hideSidebar: !this.sidebar.opened,

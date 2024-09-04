@@ -1,54 +1,42 @@
 <template>
-  <div :class="{'has-logo':showLogo}">
-    <logo v-if="showLogo" :collapse="isCollapse" />
-    <el-scrollbar wrap-class="scrollbar-wrapper">
-      <el-menu
-        :default-active="activeMenu"
-        :collapse="isCollapse"
-        :background-color="variables.menuBg"
-        :text-color="variables.menuText"
-        :unique-opened="false"
-        :active-text-color="variables.menuActiveText"
-        :collapse-transition="false"
-        mode="vertical"
-      >
-        <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path" />
-      </el-menu>
-    </el-scrollbar>
-  </div>
+  <el-menu
+    :default-active="activeMenu"
+    :collapse="isCollapse"
+    mode="vertical"
+    @select="handleMenuSelect"
+  >
+    <el-menu-item
+      v-for="item in menuItems"
+      :key="item.index"
+      :index="item.index"
+    >
+      <i :class="item.icon"></i>
+      <span slot="title">{{ item.title }}</span>
+    </el-menu-item>
+  </el-menu>
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
-import Logo from './Logo'
-import SidebarItem from './SidebarItem'
-import variables from '@/styles/variables.scss'
-
 export default {
-  components: { SidebarItem, Logo },
-  computed: {
-    ...mapGetters([
-      'permission_routes',
-      'sidebar'
-    ]),
-    activeMenu() {
-      const route = this.$route
-      const { meta, path } = route
-      // if set path, the sidebar will highlight the path you set
-      if (meta.activeMenu) {
-        return meta.activeMenu
-      }
-      return path
-    },
-    showLogo() {
-      return this.$store.state.settings.sidebarLogo
-    },
-    variables() {
-      return variables
-    },
-    isCollapse() {
-      return !this.sidebar.opened
+  data() {
+    return {
+      activeMenu: '/news', // 初始化为第一个菜单项的路径
+      isCollapse: false, // 初始化为未折叠状态
+      menuItems: [
+        { index: '/news', title: '新闻管理', icon: 'el-icon-news' },
+        { index: '/products', title: '产品管理', icon: 'el-icon-goods' },
+        { index: '/albums', title: '相册管理', icon: 'el-icon-picture' },
+        { index: '/brands', title: '品牌管理', icon: 'el-icon-star-on' },
+        { index: '/visitors', title: '访客统计', icon: 'el-icon-user-solid' },
+        { index: '/users', title: '用户管理', icon: 'el-icon-user' }
+      ]
+    };
+  },
+  methods: {
+    handleMenuSelect(index) {
+      this.activeMenu = index; // 更新 activeMenu 以确保菜单高亮
+      this.$router.push(index);
     }
   }
-}
+};
 </script>

@@ -189,3 +189,10 @@ aside {
 .multiselect--active {
   z-index: 1000 !important;
 }
+.el-menu-item {
+  color: #ffffff;
+}
+.el-menu-item:hover, .el-menu-item:focus {
+  outline: none;
+  background-color: #000000;
+}

@@ -1,10 +1,10 @@
 <template>
   <section class="app-main">
     <transition name="fade-transform" mode="out-in">
-      <keep-alive :include="cachedViews">
-        <router-view :key="key" />
-      </keep-alive>
+      <!-- 尝试暂时移除 keep-alive -->
+      <router-view @hook:mounted="onComponentMounted" :key="key" style="border: 2px solid red; background-color: rgba(255, 0, 0, 0.1);" />
     </transition>
+    <div>Current Key: {{ key }}</div> <!-- 用于调试 -->
   </section>
 </template>
 
@@ -12,15 +12,22 @@
 export default {
   name: 'AppMain',
   computed: {
-    cachedViews() {
-      return this.$store.state.tagsView.cachedViews
-    },
     key() {
-      return this.$route.path
+      return this.$route.fullPath; // 使用 fullPath 包括查询参数
+    }
+  },
+  beforeRouteEnter(to, from, next) {
+    console.log('Entering route:', to.path);
+    next();
+  },
+  methods: {
+    onComponentMounted() {
+      console.log('Component mounted for route:', this.$route.path);
     }
   }
 }
 </script>
+
 
 <style lang="scss" scoped>
 .app-main {
