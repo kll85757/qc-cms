@@ -88,34 +88,71 @@ export function logout() {
 }
 
 // 新闻模块
-export function createNews(data) {
+export function getNewsList(data) {
   return request({
-    url: '/news',
+    url: `/news/page`,
+    data: {
+      pageNo: data.pageNo || 1,
+      pageSize: data.pageSize || 10,
+      condition: {
+        title: data.title || '',
+        categoryCode: data.categoryCode || '',
+        status: data.status || '1',
+      },
+    },
     method: 'post',
-    data
-  })
+  });
+}
+
+export function deleteNews(id) {
+  return request({
+    url: `/news/${id}`,
+    method: 'delete',
+  });
+}
+
+export function getNews(id) {
+  return request({
+    url: `/news/${id}`,
+    method: 'get',
+  });
 }
 
 export function updateNews(data) {
   return request({
     url: '/news',
     method: 'put',
-    data
-  })
+    data: {
+      id: data.id,
+      title: data.title,
+      categoryCode: data.categoryCode,
+      pictures: data.pictures || [],
+      keyWords: data.keyWords || [],
+      sortNo: data.sortNo || 0,
+      productIds: data.productIds || [],
+      status: data.status,
+      releaseTime: data.releaseTime,
+      newsDetail: data.newsDetail,
+    },
+  });
 }
 
-export function deleteNews(id) {
+export function createNews(data) {
   return request({
-    url: `/news/${id}`,
-    method: 'delete'
-  })
-}
-
-export function getNews(id) {
-  return request({
-    url: `/news/${id}`,
-    method: 'get'
-  })
+    url: '/news',
+    method: 'post',
+    data: {
+      title: data.title,
+      categoryCode: data.categoryCode,
+      pictures: data.pictures || [],
+      keyWords: data.keyWords || [],
+      sortNo: data.sortNo || 0,
+      productIds: data.productIds || [],
+      status: data.status,
+      releaseTime: data.releaseTime,
+      newsDetail: data.newsDetail,
+    },
+  });
 }
 
 // 分类模块

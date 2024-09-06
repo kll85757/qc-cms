@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.title" placeholder="Title" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
-      <el-button type="primary" icon="el-icon-search" @click="handleFilter" class="filter-item">Search</el-button>
-      <el-button type="primary" icon="el-icon-edit" @click="handleCreate" class="filter-item" style="margin-left: 10px;">Add</el-button>
+      <el-input v-model="listQuery.title" placeholder="标题" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-button type="primary" icon="el-icon-search" @click="handleFilter" class="filter-item">搜索</el-button>
+      <el-button type="primary" icon="el-icon-edit" @click="handleCreate" class="filter-item" style="margin-left: 10px;">新增</el-button>
     </div>
 
     <el-table
@@ -25,10 +25,10 @@
       </el-table-column>
       <el-table-column label="操作" width="300px" align="center">
         <template slot-scope="{ row }">
-          <el-button type="primary" size="mini" @click="handleEdit(row)">Edit</el-button>
-          <el-button v-if="row.status !== 'published'" size="mini" type="success" @click="handlePublish(row)">Publish</el-button>
-          <el-button v-if="row.status === 'published'" size="mini" @click="handleUnpublish(row)">Unpublish</el-button>
-          <el-button size="mini" type="danger" @click="handleDelete(row)">Delete</el-button>
+          <el-button type="primary" size="mini" @click="handleEdit(row)">编辑</el-button>
+          <el-button v-if="row.status !== 'published'" size="mini" type="success" @click="handlePublish(row)">发布</el-button>
+          <el-button v-if="row.status === 'published'" size="mini" @click="handleUnpublish(row)">下架</el-button>
+          <el-button size="mini" type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -39,72 +39,86 @@
           <el-input v-model="currentNews.title" />
         </el-form-item>
         <el-form-item label="发布时间">
-          <el-date-picker v-model="currentNews.date" type="datetime" />
+          <el-date-picker v-model="currentNews.releaseTime" type="datetime" />
         </el-form-item>
-        <el-form-item label="今日点击数">
-          <el-input v-model="currentNews.todayClicks" type="number" />
-        </el-form-item>
-        <el-form-item label="历史点击数">
-          <el-input v-model="currentNews.totalClicks" type="number" />
+        <el-form-item label="新闻详情">
+          <el-input v-model="currentNews.newsDetail" type="textarea" rows="6" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button type="primary" @click="handleSave">Save</el-button>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSave">保存</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import { getNewsList, updateNews, deleteNews, createNews } from '@/utils/api';
+
 export default {
   data() {
     return {
       listQuery: {
         title: '',
+        pageNo: 1,
+        pageSize: 10,
       },
-      newsList: [
-        { id: 1, title: '新闻标题一', date: '2023-09-01 10:00', todayClicks: 123, totalClicks: 1024, status: 'published' },
-        { id: 2, title: '新闻标题二', date: '2023-09-02 11:00', todayClicks: 456, totalClicks: 2048, status: 'draft' },
-        { id: 3, title: '新闻标题三', date: '2023-09-03 12:00', todayClicks: 789, totalClicks: 3072, status: 'published' },
-      ],
+      newsList: [],
+      total: 0,
       dialogVisible: false,
-      currentNews: { id: null, title: '', date: '', todayClicks: 0, totalClicks: 0, status: 'draft' },
+      currentNews: {
+        id: null,
+        title: '',
+        releaseTime: '',
+        newsDetail: '',
+        status: 'draft',
+      },
     };
   },
+  created() {
+    this.fetchNewsList();
+  },
   methods: {
+    async fetchNewsList() {
+      const response = await getNewsList(this.listQuery);
+      this.newsList = response.data.items;
+      this.total = response.data.total;
+    },
     handleFilter() {
-      console.log('过滤条件:', this.listQuery);
-      // 添加过滤逻辑
+      this.listQuery.pageNo = 1;
+      this.fetchNewsList();
     },
     handleCreate() {
-      this.currentNews = { id: null, title: '', date: '', todayClicks: 0, totalClicks: 0, status: 'draft' };
+      this.currentNews = { id: null, title: '', releaseTime: new Date(), newsDetail: '', status: 'draft' };
       this.dialogVisible = true;
     },
-    handleEdit(row) {
+    async handleSave() {
+      if (this.currentNews.id) {
+        await updateNews(this.currentNews);
+      } else {
+        await createNews(this.currentNews);
+      }
+      this.dialogVisible = false;
+      this.fetchNewsList();
+    },
+    async handleEdit(row) {
       this.currentNews = { ...row };
       this.dialogVisible = true;
     },
-    handleSave() {
-      if (this.currentNews.id) {
-        const index = this.newsList.findIndex(item => item.id === this.currentNews.id);
-        if (index !== -1) {
-          this.newsList.splice(index, 1, this.currentNews);
-        }
-      } else {
-        this.currentNews.id = Date.now();
-        this.newsList.push(this.currentNews);
-      }
-      this.dialogVisible = false;
+    async handleDelete(row) {
+      await deleteNews(row.id);
+      this.fetchNewsList();
     },
-    handlePublish(row) {
+    async handlePublish(row) {
       row.status = 'published';
+      await updateNews(row);
+      this.fetchNewsList();
     },
-    handleUnpublish(row) {
+    async handleUnpublish(row) {
       row.status = 'draft';
-    },
-    handleDelete(row) {
-      this.newsList = this.newsList.filter(item => item.id !== row.id);
+      await updateNews(row);
+      this.fetchNewsList();
     }
   }
 };

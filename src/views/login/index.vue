@@ -1,7 +1,13 @@
 <template>
   <div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on"
-      label-position="left">
+    <el-form
+      ref="loginForm"
+      :model="loginForm"
+      :rules="loginRules"
+      class="login-form"
+      autocomplete="on"
+      label-position="left"
+    >
       <div class="title-container">
         <h3 class="title">南京千川 后台管理系统</h3>
       </div>
@@ -10,8 +16,15 @@
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
-        <el-input ref="username" v-model="loginForm.username" placeholder="Username" name="username" type="text"
-          tabindex="1" autocomplete="on" />
+        <el-input
+          ref="username"
+          v-model="loginForm.username"
+          placeholder="Username"
+          name="username"
+          type="text"
+          tabindex="1"
+          autocomplete="on"
+        />
       </el-form-item>
 
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
@@ -19,17 +32,26 @@
           <span class="svg-container">
             <svg-icon icon-class="password" />
           </span>
-          <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType"
-            placeholder="Password" name="password" tabindex="2" autocomplete="on" @keyup.native="checkCapslock"
-            @blur="capsTooltip = false" @keyup.enter.native="handleLogin" />
+          <el-input
+            :key="passwordType"
+            ref="password"
+            v-model="loginForm.password"
+            :type="passwordType"
+            placeholder="Password"
+            name="password"
+            tabindex="2"
+            autocomplete="on"
+            @keyup.native="checkCapslock"
+            @blur="capsTooltip = false"
+            @keyup.enter.native="handleLogin"
+          />
           <span class="show-pwd" @click="showPwd">
             <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
           </span>
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px"
-        @click.native.prevent="handleLogin">
+      <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px" @click.native.prevent="handleLogin">
         Login
       </el-button>
 
@@ -50,8 +72,7 @@
     </el-form>
 
     <el-dialog title="Or connect with" :visible.sync="showDialog">
-      Can not be simulated on local, so please combine you own business
-      simulation! ! !
+      Can not be simulated on local, so please combine you own business simulation! ! !
       <br />
       <br />
       <br />
@@ -77,14 +98,12 @@ export default {
     };
     return {
       loginForm: {
-        username: "admin",
-        password: "111111",
+        username: "1111",
+        password: "1111",
       },
       loginRules: {
         username: [{ required: true, trigger: "blur" }],
-        password: [
-          { required: true, trigger: "blur", validator: validatePassword },
-        ],
+        password: [{ required: true, trigger: "blur", validator: validatePassword }],
       },
       passwordType: "password",
       capsTooltip: false,
@@ -96,7 +115,7 @@ export default {
   },
   watch: {
     $route: {
-      handler: function (route) {
+      handler(route) {
         const query = route.query;
         if (query) {
           this.redirect = query.redirect;
@@ -119,11 +138,7 @@ export default {
       this.capsTooltip = key && key.length === 1 && key >= "A" && key <= "Z";
     },
     showPwd() {
-      if (this.passwordType === "password") {
-        this.passwordType = "";
-      } else {
-        this.passwordType = "password";
-      }
+      this.passwordType = this.passwordType === "password" ? "" : "password";
       this.$nextTick(() => {
         this.$refs.password.focus();
       });
@@ -133,33 +148,24 @@ export default {
         if (valid) {
           this.loading = true;
 
-          // Prepare the login data with loginType included
           const loginData = {
             username: this.loginForm.username,
             password: this.loginForm.password,
             clientId: "pc",
-            loginType: "1", // Ensure that the loginType is included as required
+            loginType: "1",
           };
 
-          // Call the login API
           login(loginData)
             .then((response) => {
               if (response.success) {
-                // Store the tokens in Vuex or localStorage
-                this.$store.commit('user/SET_TOKEN', response.data.accessToken);
+                this.$store.commit("user/SET_TOKEN", response.data.accessToken);
                 localStorage.setItem("refreshToken", response.data.refreshToken);
 
-                // Redirect to the intended page or home page
-                const redirectPath = this.redirect || "/";
-                console.log("Redirecting to:", redirectPath);
+                this.$axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.accessToken}`;
 
-                this.$router.push({
-                  path: redirectPath,
-                  query: this.otherQuery,
-                });
-                this.loading = false;
+                const redirectPath = this.redirect || "/";
+                this.$router.push({ path: redirectPath, query: this.otherQuery });
               } else {
-                // Handle login failure
                 this.$message.error("Login failed, please check your credentials.");
               }
               this.loading = false;
@@ -189,8 +195,6 @@ export default {
 
 <style lang="scss">
 /* 修复input 背景不协调 和光标变色 */
-/* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
-
 $bg: #283443;
 $light_gray: #fff;
 $cursor: #fff;
@@ -215,7 +219,6 @@ $cursor: #fff;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
       color: $light_gray;
-      height: 47px;
       caret-color: $cursor;
 
       &:-webkit-autofill {
