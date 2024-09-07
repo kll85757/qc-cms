@@ -1,6 +1,6 @@
 <template>
   <a href="https://github.com/PanJiaChen/vue-element-admin" target="_blank" class="github-corner" aria-label="View source on Github">
-    <svg
+    <!-- <svg
       width="80"
       height="80"
       viewBox="0 0 250 250"
@@ -19,7 +19,7 @@
         fill="currentColor"
         class="octo-body"
       />
-    </svg>
+    </svg> -->
   </a>
 </template>
 

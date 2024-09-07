@@ -11,7 +11,7 @@
       :index="item.index"
     >
       <i :class="item.icon"></i>
-      <span slot="title">{{ item.title }}</span>
+      <span>{{ item.title }}</span>
     </el-menu-item>
   </el-menu>
 </template>
@@ -20,8 +20,8 @@
 export default {
   data() {
     return {
-      activeMenu: '/news', // 初始化为第一个菜单项的路径
-      isCollapse: false, // 初始化为未折叠状态
+      activeMenu: '/albums', // 默认设置为 "/albums"（可以根据需求修改）
+      isCollapse: false, // 控制菜单是否折叠
       menuItems: [
         { index: '/news', title: '新闻管理', icon: 'el-icon-news' },
         { index: '/products', title: '产品管理', icon: 'el-icon-goods' },
@@ -34,9 +34,20 @@ export default {
   },
   methods: {
     handleMenuSelect(index) {
-      this.activeMenu = index; // 更新 activeMenu 以确保菜单高亮
-      this.$router.push(index);
+      this.activeMenu = index; // 设置选中的菜单
+      this.$router.push(index); // 使用 Vue Router 切换路由
     }
+  },
+  watch: {
+    // 监听路由变化，确保菜单高亮
+    $route(to) {
+      // 这里需要使用 `to.path`，确保匹配 `hash` 模式下的路径
+      this.activeMenu = to.path;
+    }
+  },
+  mounted() {
+    // 页面加载时初始化菜单的高亮状态，确保根据当前路由设置选中菜单项
+    this.activeMenu = this.$route.path;
   }
 };
 </script>

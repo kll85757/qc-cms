@@ -56,18 +56,18 @@
       </el-button>
 
       <div style="position: relative">
-        <div class="tips">
+        <!-- <div class="tips">
           <span>Username : admin</span>
           <span>Password : any</span>
         </div>
         <div class="tips">
           <span style="margin-right: 18px">Username : editor</span>
           <span>Password : any</span>
-        </div>
+        </div> -->
 
-        <el-button class="thirdparty-button" type="primary" @click="showDialog = true">
+        <!-- <el-button class="thirdparty-button" type="primary" @click="showDialog = true">
           Or connect with
-        </el-button>
+        </el-button> -->
       </div>
     </el-form>
 
@@ -98,8 +98,8 @@ export default {
     };
     return {
       loginForm: {
-        username: "1111",
-        password: "1111",
+        username: "",
+        password: "",
       },
       loginRules: {
         username: [{ required: true, trigger: "blur" }],
@@ -151,7 +151,7 @@ export default {
           const loginData = {
             username: this.loginForm.username,
             password: this.loginForm.password,
-            clientId: "pc",
+            clientId: "app",
             loginType: "1",
           };
 
