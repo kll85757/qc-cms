@@ -152,15 +152,20 @@ export default {
       this.listQuery.pageNo = val;
       this.fetchAlbumList();
     },
-    handleFileChange(file) {
-      this.fileList = this.fileList.concat(file);
+    handleFileChange(file, fileList) {
+      // 获取文件数据
+      const fileData = file.raw;
+
+      // 添加到 fileList
+      this.fileList = fileList;
+
+      // 调用 uploadFile 函数上传文件
+      this.uploadFile(fileData);
     },
-    async uploadFile(file) {
-      console.log('00000000')
+    async uploadFile(fileData) {
       try {
-        const uploadResponse = await uploadFile(file.raw);
+        const uploadResponse = await uploadFile(fileData);
         const fileName = uploadResponse.data.fileName;
-        console.log('pic',fileName)
         const accessResponse = await getFileAccessUrl(fileName);
         this.albumImages.push({ id: fileName, url: accessResponse.data.accessUrl });
       } catch (error) {

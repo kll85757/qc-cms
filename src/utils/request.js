@@ -7,7 +7,7 @@ import router from '@/router'; // 导入 Vue Router 实例
 // 创建 axios 实例
 const service = axios.create({
   baseURL: 'https://cms.fhmuseum.cn', // 设置你的 API 基础 URL
-  timeout: 5000, // 请求超时时间
+  timeout: 9999999999999999999, // 请求超时时间
 });
 
 // 请求拦截器

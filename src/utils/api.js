@@ -374,10 +374,11 @@ export function getProductList(query) {
 }
 
 // 文件上传模块
-export function uploadFile(file) {
+export async function uploadFile(file) {
   const formData = new FormData();
   formData.append('file', file);
-  return request({
+
+  const response = await request({
     url: '/file/upload',
     method: 'post',
     headers: {
@@ -385,6 +386,32 @@ export function uploadFile(file) {
     },
     data: formData
   });
+
+  // 检查上传是否成功
+  if (response.success) {
+    const fileName = response.data.fileName;
+    // 获取图片访问链接
+    const accessResponse = await request({
+      url: `/file/accessUrl/${fileName}`,
+      method: 'get'
+    });
+
+    // 检查获取图片链接是否成功
+    if (accessResponse.success) {
+      return {
+        id: fileName, // 使用文件名作为图片标识
+        url: accessResponse.data 
+      };
+    } else {
+      // 处理获取图片链接失败的情况
+      console.error("获取图片访问链接失败:", accessResponse);
+      throw new Error("获取图片访问链接失败"); // 抛出错误，让调用者处理
+    }
+  } else {
+    // 处理上传失败的情况
+    console.error("图片上传失败:", response.msg);
+    throw new Error("图片上传失败"); // 抛出错误，让调用者处理
+  }
 }
 
 export function getAlbumImages(albumId) {
