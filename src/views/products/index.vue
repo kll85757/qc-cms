@@ -82,18 +82,29 @@
         <el-form-item label="描述">
           <el-input v-model="currentProduct.description" type="textarea" />
         </el-form-item>
-        <el-form-item label="发布时间">
-          <el-date-picker
-            v-model="currentProduct.releaseTime"
-            type="datetime"
-          />
+        <el-form-item label="关键词">
+          <el-input v-model="currentProduct.keyWords" type="textarea" @input="handleKeyWordsInput" placeholder="输入关键词，用逗号分隔" />
+          <!-- <div v-if="currentProduct.keyWords.length > 0" style="margin-top: 10px;">
+            <el-button size="mini" type="danger" @click="handleClearKeywords">清空关键词</el-button>
+          </div> -->
         </el-form-item>
-        <el-form-item label="产品详情">
-          <el-input
-            v-model="currentProduct.productDetail"
-            type="textarea"
-            rows="6"
-          />
+        <el-form-item label="产品图片">
+          <el-upload
+            class="upload-demo"
+            action="your-upload-endpoint"
+            :file-list="fileList"
+            :on-success="handleUploadSuccess"
+            :on-remove="handleRemoveImage"
+            :before-remove="beforeRemoveImage"
+            multiple
+            :limit="5"
+            accept="image/*"
+          >
+            <el-button size="small" type="primary">点击上传</el-button>
+          </el-upload>
+          <div v-if="fileList.length > 0" style="margin-top: 10px;">
+            <el-button size="mini" type="danger" @click="handleClearImages">清空图片</el-button>
+          </div>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -103,6 +114,7 @@
     </el-dialog>
   </div>
 </template>
+
 
 <script>
 import {
@@ -116,7 +128,7 @@ import { MessageBox } from "element-ui";
 
 function formatDateTime(date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // 月份从0开始，需要+1
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
@@ -136,46 +148,41 @@ export default {
       productList: [],
       total: 0,
       dialogVisible: false,
-      brandList: [], // 用于存储品牌列表
+      brandList: [],
       currentProduct: {
         id: null,
         categoryCode: "",
-        brandCode: "", // 绑定品牌选项
+        brandCode: "",
         title: "",
         description: "",
         keyWords: [],
         pictures: [],
         productDetail: "",
-        releaseTime: "",
-        status: "1", // 永远为 '1'
+        releaseTime: formatDateTime(new Date()),
+        status: "1",
       },
+      fileList: [],
     };
   },
   created() {
     this.fetchProductList();
-    this.fetchBrandList(); // 页面加载时获取品牌列表
+    this.fetchBrandList();
   },
   methods: {
-    // 获取品牌列表，拉取所有数据
     async fetchBrandList() {
       const response = await getBrandList({
         pageNo: 1,
-        pageSize: 20, // 拉取20条数据
+        pageSize: 20,
         title: "",
       });
-      this.brandList = response.data.records; // 存储品牌列表
+      this.brandList = response.data.records;
     },
-    // 获取产品列表
     async fetchProductList() {
       const response = await getProductList({
         pageNo: this.listQuery.pageNo,
         pageSize: this.listQuery.pageSize,
-        condition: {
-          title: this.listQuery.title,
-          status: "1",
-        },
+        condition: { title: this.listQuery.title, status: "1" },
       });
-
       this.productList = response.data.records;
       this.total = response.data.total;
     },
@@ -187,19 +194,20 @@ export default {
       this.currentProduct = {
         id: null,
         categoryCode: "",
-        brandCode: "", // 绑定品牌选择的值
+        brandCode: "",
         title: "",
         description: "",
-        keyWords: ["1", "222"],
+        keyWords: [],
         pictures: [],
         productDetail: "",
         releaseTime: formatDateTime(new Date()),
         status: "1",
       };
+      this.fileList = [];
       this.dialogVisible = true;
     },
     async handleSave() {
-      this.currentProduct.status = "1"; // 保证保存时 status 为 '1'
+      this.currentProduct.pictures = this.fileList.map(file => file.url); // Assuming 'file.url' is the file URL after upload.
       if (this.currentProduct.id) {
         await updateProduct(this.currentProduct);
       } else {
@@ -210,6 +218,7 @@ export default {
     },
     async handleEdit(row) {
       this.currentProduct = { ...row };
+      this.fileList = row.pictures ? row.pictures.map(pic => ({ url: pic })) : [];
       this.dialogVisible = true;
     },
     confirmDelete(row) {
@@ -217,13 +226,9 @@ export default {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
-      })
-        .then(() => {
-          this.handleDelete(row);
-        })
-        .catch(() => {
-          console.log("删除操作取消");
-        });
+      }).then(() => {
+        this.handleDelete(row);
+      });
     },
     async handleDelete(row) {
       await deleteProduct(row.id);
@@ -237,6 +242,25 @@ export default {
       this.listQuery.pageNo = val;
       this.fetchProductList();
     },
+    handleKeyWordsInput(value) {
+      this.currentProduct.keyWords = value.split(",");
+    },
+    handleClearKeywords() {
+      this.currentProduct.keyWords = [];
+    },
+    handleUploadSuccess(response, file, fileList) {
+      this.fileList = fileList;
+    },
+    handleRemoveImage(file, fileList) {
+      this.fileList = fileList;
+    },
+    beforeRemoveImage(file) {
+      return this.$confirm(`确定要删除此图片吗?`);
+    },
+    handleClearImages() {
+      this.fileList = [];
+    },
   },
 };
 </script>
+

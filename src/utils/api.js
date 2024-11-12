@@ -144,9 +144,9 @@ export function getNewsList(data) {
       pageNo: data.pageNo || 1,
       pageSize: data.pageSize || 10,
       condition: {
-        title: data.title || '',
-        categoryCode: data.categoryCode || '',
-        status: data.status || '1'
+        title: data.title || null,
+        categoryCode: data.categoryCode || null,
+        status: data.status || null
       }
     }
   });
@@ -372,3 +372,25 @@ export function getProductList(query) {
     }
   });
 }
+
+// 文件上传模块
+export function uploadFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request({
+    url: '/file/upload',
+    method: 'post',
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    },
+    data: formData
+  });
+}
+
+export function getAlbumImages(albumId) {
+  return request({
+    url: `/album/${albumId}`, // Endpoint to fetch images for a specific album
+    method: "get"
+  });
+}
+

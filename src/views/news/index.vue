@@ -134,7 +134,7 @@ export default {
         title: "",
         releaseTime: "",
         newsDetail: "",
-        status: "1", // 默认设置为 '1'
+        // status: "1", 
       },
     };
   },
