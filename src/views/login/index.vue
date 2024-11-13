@@ -1,13 +1,7 @@
 <template>
   <div class="login-container">
-    <el-form
-      ref="loginForm"
-      :model="loginForm"
-      :rules="loginRules"
-      class="login-form"
-      autocomplete="on"
-      label-position="left"
-    >
+    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on"
+      label-position="left">
       <div class="title-container">
         <h3 class="title">南京千川 后台管理系统</h3>
       </div>
@@ -16,15 +10,8 @@
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
-        <el-input
-          ref="username"
-          v-model="loginForm.username"
-          placeholder="Username"
-          name="username"
-          type="text"
-          tabindex="1"
-          autocomplete="on"
-        />
+        <el-input ref="username" v-model="loginForm.username" placeholder="Username" name="username" type="text"
+          tabindex="1" autocomplete="on" />
       </el-form-item>
 
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
@@ -32,26 +19,17 @@
           <span class="svg-container">
             <svg-icon icon-class="password" />
           </span>
-          <el-input
-            :key="passwordType"
-            ref="password"
-            v-model="loginForm.password"
-            :type="passwordType"
-            placeholder="Password"
-            name="password"
-            tabindex="2"
-            autocomplete="on"
-            @keyup.native="checkCapslock"
-            @blur="capsTooltip = false"
-            @keyup.enter.native="handleLogin"
-          />
+          <el-input :key="passwordType" ref="password" v-model="loginForm.password" :type="passwordType"
+            placeholder="Password" name="password" tabindex="2" autocomplete="on" @keyup.native="checkCapslock"
+            @blur="capsTooltip = false" @keyup.enter.native="handleLogin" />
           <span class="show-pwd" @click="showPwd">
             <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
           </span>
         </el-form-item>
       </el-tooltip>
 
-      <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px" @click.native.prevent="handleLogin">
+      <el-button :loading="loading" type="primary" style="width: 100%; margin-bottom: 30px"
+        @click.native.prevent="handleLogin">
         Login
       </el-button>
 
@@ -84,6 +62,7 @@
 <script>
 import { login } from "@/utils/api";
 import SocialSign from "./components/SocialSignin";
+import { getToken, setToken, removeToken } from '@/utils/auth'
 
 export default {
   name: "Login",
@@ -158,10 +137,15 @@ export default {
           login(loginData)
             .then((response) => {
               if (response.success) {
-                this.$store.commit("user/SET_TOKEN", response.data.accessToken);
-                localStorage.setItem("refreshToken", response.data.refreshToken);
+                const token = response.data.accessToken;
+                const refreshToken = response.data.refreshToken;
 
-                this.$axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.accessToken}`;
+                // Use the setToken function to ensure token is stored consistently
+                this.$store.commit("user/SET_TOKEN", token);
+                setToken(token); // Store token using the helper function
+                localStorage.setItem("refreshToken", refreshToken);
+
+                this.$axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
                 const redirectPath = this.redirect || "/";
                 this.$router.push({ path: redirectPath, query: this.otherQuery });

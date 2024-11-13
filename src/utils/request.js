@@ -2,19 +2,24 @@ import axios from 'axios';
 import { MessageBox, Message } from 'element-ui';
 import store from '@/store';
 import router from '@/router'; // 导入 Vue Router 实例
+import { getToken } from '@/utils/auth'
+
 
 
 // 创建 axios 实例
 const service = axios.create({
   baseURL: 'https://cms.fhmuseum.cn', // 设置你的 API 基础 URL
-  timeout: 9999999999999999999, // 请求超时时间
+  timeout: 10000, // 请求超时时间
 });
 
 // 请求拦截器
 service.interceptors.request.use(
   config => {
     // 获取 token
-    const token = localStorage.getItem('accessToken') || store.getters.token;
+    // const token = localStorage.getItem('accessToken') || store.getters.token;
+    const token = getToken()
+    console.log('Token in request interceptor:', token)  // 检查每次请求时的 token
+
     if (token) {
       // 如果存在 token，则将其添加到请求头
       config.headers['Authorization'] = `Bearer ${token}`;

@@ -10,6 +10,12 @@ const state = {
   roles: []
 }
 
+console.log('Initial token from Vuex state:', state.token)  // 打印初始化的 token
+
+
+console.log('Initial token from Cookie:', getToken())  // 页面加载时检查 token 是否正确读取
+
+
 const mutations = {
   SET_TOKEN: (state, token) => {
     state.token = token
@@ -36,13 +42,17 @@ const actions = {
       login({ username: username.trim(), password: password }).then(response => {
         const { data } = response
         commit('SET_TOKEN', data.token)
-        setToken(data.token)
+        setToken(data.token)  // 存入 Cookies
+        console.log('Token after login set to Cookies:', getToken())  // 确认 Cookies 中的 token
         resolve()
       }).catch(error => {
         reject(error)
       })
     })
   },
+  
+
+
 
   // get user info
   getInfo({ commit, state }) {
