@@ -1,4 +1,6 @@
 import request from '@/utils/request'
+import { getToken } from '@/utils/auth'
+
 
 // 用户模块
 export function getUser(userId) {
@@ -378,6 +380,10 @@ export async function uploadFile(file) {
   const formData = new FormData();
   formData.append('file', file);
 
+
+  // 打印 token 以检查
+  const token = getToken();
+  console.log('Token in uploadFile method:', token);
   const response = await request({
     url: '/file/upload',
     method: 'post',
@@ -391,22 +397,27 @@ export async function uploadFile(file) {
   if (response.success) {
     const fileName = response.data.fileName;
     // 获取图片访问链接
-    const accessResponse = await request({
-      url: `/file/accessUrl/${fileName}`,
-      method: 'get'
-    });
 
-    // 检查获取图片链接是否成功
-    if (accessResponse.success) {
-      return {
-        id: fileName, // 使用文件名作为图片标识
-        url: accessResponse.data 
-      };
-    } else {
-      // 处理获取图片链接失败的情况
-      console.error("获取图片访问链接失败:", accessResponse);
-      throw new Error("获取图片访问链接失败"); // 抛出错误，让调用者处理
-    }
+    return {
+      id: fileName, // 使用文件名作为图片标识
+      url: fileName
+    };
+    // const accessResponse = await request({
+    //   url: `/file/accessUrl/${fileName}`,
+    //   method: 'get'
+    // });
+
+    // // 检查获取图片链接是否成功
+    // if (accessResponse.success) {
+    //   return {
+    //     id: fileName, // 使用文件名作为图片标识
+    //     url: accessResponse.data
+    //   };
+    // } else {
+    //   // 处理获取图片链接失败的情况
+    //   console.error("获取图片访问链接失败:", accessResponse);
+    //   throw new Error("获取图片访问链接失败"); // 抛出错误，让调用者处理
+    // }
   } else {
     // 处理上传失败的情况
     console.error("图片上传失败:", response.msg);
