@@ -25,6 +25,7 @@ export default {
       menuItems: [
         { index: '/news', title: '新闻管理', icon: 'el-icon-news' },
         { index: '/products', title: '产品管理', icon: 'el-icon-goods' },
+        { index: '/type', title: '分类管理', icon: 'el-icon-goods' },
         { index: '/albums', title: '相册管理', icon: 'el-icon-picture' },
         { index: '/brands', title: '品牌管理', icon: 'el-icon-star-on' },
         { index: '/visitors', title: '访客统计', icon: 'el-icon-user-solid' },

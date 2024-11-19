@@ -80,6 +80,18 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/type',
+    component: Layout,
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/type/index'),
+        name: 'TypeManagement',
+        meta: { title: '分类管理', icon: 'el-icon-goods' }
+      }
+    ]
+  },
+  {
     path: '/albums',
     component: Layout,
     children: [

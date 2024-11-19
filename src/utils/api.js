@@ -206,6 +206,26 @@ export function createNews(data) {
 }
 
 // 分类模块
+
+// 获取分类分页数据
+export function getCategoryPage(data) {
+  return request({
+    url: '/category/page',
+    method: 'post',
+    data: {
+      pageNo: data.pageNo || 1,
+      pageSize: data.pageSize || 100,
+      condition: {
+        code: data.condition?.code || null,
+        name: data.condition?.name || null,
+        parentCode: data.condition?.parentCode || null,
+        groupCode: data.condition?.groupCode || null
+      }
+    }
+  });
+}
+
+
 export function createCategory(data) {
   return request({
     url: '/category',
