@@ -92,6 +92,12 @@
         <el-form-item label="发布时间">
           <el-date-picker v-model="currentNews.releaseTime" type="datetime" />
         </el-form-item>
+        <el-form-item label="关键词">
+          <el-checkbox-group v-model="currentNews.keyWords">
+            <el-checkbox label="01">产品咨询</el-checkbox>
+            <el-checkbox label="02">新闻资讯</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
         <el-form-item label="新闻详情">
           <el-input v-model="currentNews.newsDetail" type="textarea" rows="6" />
         </el-form-item>
@@ -100,12 +106,14 @@
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </div>
+
     </el-dialog>
   </div>
 </template>
 
 <script>
 import { getNewsList, updateNews, deleteNews, createNews } from "@/utils/api";
+import { getNews } from "@/utils/api";
 
 function formatDateTime(date) {
   const year = date.getFullYear();
@@ -134,7 +142,7 @@ export default {
         title: "",
         releaseTime: "",
         newsDetail: "",
-        // status: "1", 
+        // status: "1",
       },
     };
   },
@@ -144,37 +152,75 @@ export default {
   methods: {
     async fetchNewsList() {
       const response = await getNewsList(this.listQuery);
-      this.newsList = response.data.items;
-      this.total = response.data.total;
+      if (response.success && response.data) {
+        this.newsList = response.data.records.map((item) => ({
+          id: item.id,
+          title: item.title,
+          releaseTime: item.releaseTime,
+          todayClicks: item.todayClicks || 0, // Default to 0 if not provided
+          totalClicks: item.totalClicks || 0, // Default to 0 if not provided
+          status: item.status === 1 ? "published" : "draft", // Map numeric status to string
+        }));
+        this.total = response.data.total;
+      } else {
+        this.$message.error(response.msg || "Failed to fetch news list");
+      }
     },
     handleFilter() {
       this.listQuery.pageNo = 1;
       this.fetchNewsList();
     },
     handleCreate() {
-      // 新增时，status 永远为 '1'
       this.currentNews = {
         id: null,
         title: "",
         releaseTime: formatDateTime(new Date()),
         newsDetail: "",
+        keyWords: [], // 默认不选中
         status: "1",
       };
       this.dialogVisible = true;
     },
     async handleSave() {
-      this.currentNews.status = "1"; // 保存时强制 status 为 '1'
+      // Ensure keywords are stored correctly
+      if (
+        this.currentNews.keyWords.includes("01") ||
+        this.currentNews.keyWords.includes("02")
+      ) {
+        this.currentNews.keyWords = [...this.currentNews.keyWords];
+      }
+
       if (this.currentNews.id) {
+        // Update existing news
         await updateNews(this.currentNews);
       } else {
+        // Create new news
         await createNews(this.currentNews);
       }
+
       this.dialogVisible = false;
       this.fetchNewsList();
     },
     async handleEdit(row) {
-      this.currentNews = { ...row };
-      this.dialogVisible = true;
+      try {
+        const response = await getNews(row.id);
+        if (response.success && response.data) {
+          this.currentNews = {
+            id: response.data.id,
+            title: response.data.title,
+            releaseTime: response.data.releaseTime,
+            newsDetail: response.data.newsDetail || "",
+            keyWords: response.data.keyWords || [], // 保证 keyWords 存在
+            status: response.data.status === 1 ? "published" : "draft",
+          };
+          this.dialogVisible = true;
+        } else {
+          this.$message.error(response.msg || "Failed to fetch news details");
+        }
+      } catch (error) {
+        this.$message.error("An error occurred while fetching news details");
+        console.error(error);
+      }
     },
     async handleDelete(row) {
       await deleteNews(row.id);
