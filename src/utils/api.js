@@ -75,10 +75,12 @@ export function createAlbum(data) {
       name: data.name,
       picNum: data.picNum,
       sortNo: data.sortNo,
-      description: data.description
+      description: data.description,
+      picture: data.picture // 将图片列表用字符串存储
     }
   });
 }
+
 
 export function updateAlbum(data) {
   return request({
@@ -89,7 +91,8 @@ export function updateAlbum(data) {
       name: data.name,
       picNum: data.picNum,
       sortNo: data.sortNo,
-      description: data.description
+      description: data.description,
+      picture: data.picture // 将图片列表用字符串存储
     }
   });
 }
@@ -422,28 +425,55 @@ export async function uploadFile(file) {
       id: fileName, // 使用文件名作为图片标识
       url: fileName
     };
-    // const accessResponse = await request({
-    //   url: `/file/accessUrl/${fileName}`,
-    //   method: 'get'
-    // });
-
-    // // 检查获取图片链接是否成功
-    // if (accessResponse.success) {
-    //   return {
-    //     id: fileName, // 使用文件名作为图片标识
-    //     url: accessResponse.data
-    //   };
-    // } else {
-    //   // 处理获取图片链接失败的情况
-    //   console.error("获取图片访问链接失败:", accessResponse);
-    //   throw new Error("获取图片访问链接失败"); // 抛出错误，让调用者处理
-    // }
+ 
   } else {
     // 处理上传失败的情况
     console.error("图片上传失败:", response.msg);
     throw new Error("图片上传失败"); // 抛出错误，让调用者处理
   }
 }
+
+// 相册模块文件上传
+export async function uploadAlbumFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // 打印 token 以检查
+  const token = getToken();
+  console.log('Token in uploadAlbumFile method:', token);
+
+  try {
+    const response = await request({
+      url: '/file/upload',
+      method: 'post',
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      data: formData
+    });
+
+    // 检查上传是否成功
+    console.log("Upload response in album method:", response);
+
+    if (response.success && response.code === "0") {
+      const fileName = response.data.fileName;
+
+      // 返回带有图片信息的对象
+      return {
+        id: fileName, // 使用文件名作为图片标识
+        url: fileName  // 图片的访问链接
+      };
+    } else {
+      // 处理上传失败的情况
+      console.error("相册图片上传失败:", response.msg);
+      throw new Error(response.msg || "相册图片上传失败");
+    }
+  } catch (error) {
+    console.error("相册上传文件过程中发生错误:", error);
+    throw error; // 将错误抛出以便调用方处理
+  }
+}
+
 
 export function getAlbumImages(albumId) {
   return request({

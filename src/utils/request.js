@@ -37,19 +37,18 @@ service.interceptors.response.use(
   response => {
     const res = response.data;
 
-    // 日志打印，查看响应内容
     console.log('API response:', res);
 
-    // 如果返回的状态码不是 '0'，则认为是错误
-    if (res.code !== '0') {
+    // 如果 code 严格不为 '0'，才视为错误
+    if (res.code && res.code !== '0') {
       Message({
         message: res.msg || 'Error',
         type: 'error',
         duration: 5 * 1000,
       });
 
-      // 处理 401 未授权或其他相关错误
-      if (res.code === '110002' || res.code === '401' || res.code === '50008' || res.code === '50012' || res.code === '50014') {
+      // 特殊错误码处理
+      if (['110002', '401', '50008', '50012', '50014'].includes(res.code)) {
         MessageBox.confirm(
           '您尚未登录或登录已过期，请重新登录！',
           '登录过期',
@@ -59,36 +58,30 @@ service.interceptors.response.use(
             type: 'warning',
           }
         ).then(() => {
-          // 触发登出操作，清除 token 并重定向到登录页面
           store.dispatch('user/resetToken').then(() => {
-            window.location.href = '/login'; // 跳转到登录页面
+            router.push('/login');
           });
         });
       }
       return Promise.reject(new Error(res.msg || 'Error'));
-    } else {
-      return res;
     }
+
+    return res; // 直接返回响应数据
   },
   error => {
-    // 处理其他错误
-    console.log('err' + error); // for debug
+    console.log('err' + error);
     Message({
       message: error.message,
       type: 'error',
       duration: 5 * 1000,
     });
 
-    // 如果是 401 错误，直接跳转到登录页面
     if (error.response && error.response.status === 401) {
       MessageBox.alert('您尚未登录或登录已过期，请重新登录！', '登录过期', {
         confirmButtonText: '确定',
         callback: () => {
           store.dispatch('user/resetToken').then(() => {
-            // window.location.href = '/login'; // 跳转到登录页面
-            router.push('/login'); // 使用 Vue Router 进行页面跳转
-
-
+            router.push('/login');
           });
         },
       });
@@ -97,5 +90,6 @@ service.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default service;
