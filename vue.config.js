@@ -10,8 +10,8 @@ const name = defaultSettings.title || '南京千川后台管理系统' // page t
 const port = process.env.port || process.env.npm_config_port || 9527 // dev port
 
 module.exports = {
-  publicPath: '/',
-  outputDir: 'dist',
+  publicPath: process.env.NODE_ENV === 'production' ? '/<repository-name>/' : '/',
+  outputDir: 'docs',
   assetsDir: 'static',
   lintOnSave: false, // 禁用 ESLint
   productionSourceMap: false,
