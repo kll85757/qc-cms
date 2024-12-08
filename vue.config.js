@@ -6,12 +6,12 @@ function resolve(dir) {
   return path.join(__dirname, dir)
 }
 
-const name = defaultSettings.title || '南京千川后台管理系统' // page title
-const port = process.env.port || process.env.npm_config_port || 9527 // dev port
+const name = defaultSettings.title || '南京千川后台管理系统' // 页面标题
+const port = process.env.port || process.env.npm_config_port || 9527 // 开发服务器端口
 
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'production' ? '/<repository-name>/' : '/',
-  outputDir: 'docs',
+  publicPath: process.env.NODE_ENV === 'production' ? '/qc-cms/' : '/',
+  outputDir: 'docs', // 输出到 docs 文件夹
   assetsDir: 'static',
   lintOnSave: false, // 禁用 ESLint
   productionSourceMap: false,
