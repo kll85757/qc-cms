@@ -53,14 +53,14 @@
         align="center"
       />
       <el-table-column label="状态" prop="status" width="100px" align="center">
-        <template slot-scope="{ row }">
+        <template #default="{ row }">
           <el-tag :type="row.status === 'published' ? 'success' : 'info'">{{
             row.status
           }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="300px" align="center">
-        <template slot-scope="{ row }">
+        <template #default="{ row }">
           <el-button type="primary" size="mini" @click="handleEdit(row)"
             >编辑</el-button
           >
@@ -84,7 +84,12 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog :visible.sync="dialogVisible" title="新闻管理">
+    <el-dialog
+      :visible.sync="dialogVisible"
+      title="新闻管理"
+      width="70%"
+      top="10vh"
+    >
       <el-form :model="currentNews" label-width="80px">
         <el-form-item label="标题">
           <el-input v-model="currentNews.title" />
@@ -96,17 +101,23 @@
           <el-checkbox-group v-model="currentNews.keyWords">
             <el-checkbox label="01">产品咨询</el-checkbox>
             <el-checkbox label="02">新闻资讯</el-checkbox>
+            <el-checkbox label="03">公司公告</el-checkbox>
+            <el-checkbox label="04">出货记录</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
         <el-form-item label="新闻详情">
-          <el-input v-model="currentNews.newsDetail" type="textarea" rows="6" />
+          <quill-editor
+          style="height: 270px; width: 100%;"
+
+            v-model="currentNews.newsDetail"
+            :options="editorOptions"
+          />
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
+      <div slot="footer" class="dialog-footer" style="padding-top: 40px;">
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSave">保存</el-button>
       </div>
-
     </el-dialog>
   </div>
 </template>
@@ -114,10 +125,15 @@
 <script>
 import { getNewsList, updateNews, deleteNews, createNews } from "@/utils/api";
 import { getNews } from "@/utils/api";
+import "quill/dist/quill.core.css";
+import "quill/dist/quill.snow.css";
+import "quill/dist/quill.bubble.css";
+import { quillEditor } from 'vue-quill-editor';
+
 
 function formatDateTime(date) {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // 月份从0开始，需要+1
+  const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
@@ -127,6 +143,9 @@ function formatDateTime(date) {
 }
 
 export default {
+  components: {
+    quillEditor// 引入并注册富文本编辑器
+  },
   data() {
     return {
       listQuery: {
@@ -142,7 +161,11 @@ export default {
         title: "",
         releaseTime: "",
         newsDetail: "",
-        // status: "1",
+        keyWords: [],
+      },
+      editorOptions: {
+        theme: "snow",
+        placeholder: "请输入新闻内容",
       },
     };
   },
@@ -157,9 +180,9 @@ export default {
           id: item.id,
           title: item.title,
           releaseTime: item.releaseTime,
-          todayClicks: item.todayClicks || 0, // Default to 0 if not provided
-          totalClicks: item.totalClicks || 0, // Default to 0 if not provided
-          status: item.status === 1 ? "published" : "draft", // Map numeric status to string
+          todayClicks: item.todayClicks || 0,
+          totalClicks: item.totalClicks || 0,
+          status: item.status === 1 ? "published" : "draft",
         }));
         this.total = response.data.total;
       } else {
@@ -176,25 +199,15 @@ export default {
         title: "",
         releaseTime: formatDateTime(new Date()),
         newsDetail: "",
-        keyWords: [], // 默认不选中
+        keyWords: [],
         status: "1",
       };
       this.dialogVisible = true;
     },
     async handleSave() {
-      // Ensure keywords are stored correctly
-      if (
-        this.currentNews.keyWords.includes("01") ||
-        this.currentNews.keyWords.includes("02")
-      ) {
-        this.currentNews.keyWords = [...this.currentNews.keyWords];
-      }
-
       if (this.currentNews.id) {
-        // Update existing news
         await updateNews(this.currentNews);
       } else {
-        // Create new news
         await createNews(this.currentNews);
       }
 
@@ -202,24 +215,10 @@ export default {
       this.fetchNewsList();
     },
     async handleEdit(row) {
-      try {
-        const response = await getNews(row.id);
-        if (response.success && response.data) {
-          this.currentNews = {
-            id: response.data.id,
-            title: response.data.title,
-            releaseTime: response.data.releaseTime,
-            newsDetail: response.data.newsDetail || "",
-            keyWords: response.data.keyWords || [], // 保证 keyWords 存在
-            status: response.data.status === 1 ? "published" : "draft",
-          };
-          this.dialogVisible = true;
-        } else {
-          this.$message.error(response.msg || "Failed to fetch news details");
-        }
-      } catch (error) {
-        this.$message.error("An error occurred while fetching news details");
-        console.error(error);
+      const response = await getNews(row.id);
+      if (response.success && response.data) {
+        this.currentNews = { ...response.data };
+        this.dialogVisible = true;
       }
     },
     async handleDelete(row) {
@@ -239,3 +238,20 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.app-container {
+  padding: 20px;
+}
+
+.filter-container {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.dialog-footer {
+  text-align: right;
+}
+</style>
