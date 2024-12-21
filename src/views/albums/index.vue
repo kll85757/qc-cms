@@ -88,7 +88,7 @@
             :auto-upload="false"
             action=""
             accept="image/*"
-            :on-change="handleFileChange"
+            :on-change="debouncedHandleFileChange"
             :http-request="uploadFile"
             multiple
           >
@@ -146,6 +146,7 @@
 </template>
 
 <script>
+
 import {
   getAlbumList,
   createAlbum,
@@ -182,6 +183,16 @@ export default {
     this.fetchAlbumList();
   },
   methods: {
+    // 防抖函数定义在 methods 中，绑定 this
+    debounce(func, delay) {
+      let timer;
+      return (...args) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          func.apply(this, args);
+        }, delay);
+      };
+    },
     async fetchAlbumList() {
       const response = await getAlbumList({
         pageNo: this.listQuery.pageNo,
@@ -253,31 +264,32 @@ export default {
       this.listQuery.pageNo = val;
       this.fetchAlbumList();
     },
-    async handleFileChange(file, fileList) {
-      const newFiles = fileList.filter(
-        (f) => !this.fileList.some((existingFile) => existingFile.url === f.url)
-      );
-      for (const newFile of newFiles) {
-        await this.uploadFile(newFile);
-      }
+    // 添加防抖包装的文件变更处理
+    debouncedHandleFileChange: null, // 初始化为空
+    handleFileChange(file, fileList) {
+      const uniqueFiles = fileList.filter((newFile) => {
+        return !this.albumImages.some(
+          (existingUrl) => existingUrl === newFile.raw.name
+        );
+      });
+
+      // 上传每个唯一文件
+      uniqueFiles.forEach(async (uniqueFile) => {
+        await this.uploadFile(uniqueFile);
+      });
     },
     async uploadFile(fileData) {
       try {
-        console.log("Uploading file for album:", fileData);
+        if (this.fileList.some((file) => file.name === fileData.name)) return;
 
-        // 使用新的上传方法
         const { id, url } = await uploadAlbumFile(fileData.raw);
 
-        console.log("Uploaded file for album:", { id, url });
-
-        // 更新 fileList 和 albumImages
-        const image = { name: fileData.name, url };
-        this.fileList.push(image);
-        this.albumImages.push(url);
-
-        console.log("Album images updated successfully:", this.albumImages);
+        if (!this.albumImages.includes(url)) {
+          this.albumImages.push(url);
+          this.fileList.push({ name: fileData.name, url });
+        }
       } catch (error) {
-        console.error("相册图片上传失败:", error);
+        console.error("图片上传失败：", error);
       }
     },
     deleteImage(index) {
@@ -285,5 +297,10 @@ export default {
       this.fileList.splice(index, 1);
     },
   },
+  mounted() {
+    // 在组件挂载时绑定防抖函数
+    this.debouncedHandleFileChange = this.debounce(this.handleFileChange, 300);
+  },
 };
+
 </script>
