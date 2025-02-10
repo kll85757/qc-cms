@@ -49,9 +49,9 @@
           <el-button size="mini" type="danger" @click="confirmDelete(row)"
             >删除</el-button
           >
-          <el-button size="mini" @click="viewAlbumImages(row)"
+          <!-- <el-button size="mini" @click="viewAlbumImages(row)"
             >查看图片</el-button
-          >
+          > -->
         </template>
       </el-table-column>
     </el-table>
@@ -231,6 +231,9 @@ export default {
       this.fetchAlbumList();
     },
     async handleEdit(row) {
+      this.viewAlbumImages = (row) => {
+        console.log("Viewing images for album:", row);
+      };
       this.currentAlbum = { ...row };
       this.albumImages = row.picture ? row.picture.split(",") : [];
       this.fileList = this.albumImages.map((url) => ({
