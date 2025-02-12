@@ -344,11 +344,15 @@ export default {
     },
     async handleFileChange(file, fileList) {
       const newFiles = fileList.filter(
-        (f) => !this.fileList.some((existingFile) => existingFile.url === f.url)
+        (f) => f && f.url && !this.fileList.some((existingFile) => existingFile.url === f.url)
       );
       this.fileList.push(...newFiles);
     },
     async uploadFile(fileData) {
+      if (!fileData.file || !fileData.file.size) {
+        console.error("上传的文件无效");
+        return false;
+      }
       try {
         const uploadedFile = await uploadFile(fileData.file);
         this.fileList.push(uploadedFile);
