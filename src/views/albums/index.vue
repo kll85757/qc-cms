@@ -146,7 +146,6 @@
 </template>
 
 <script>
-
 import {
   getAlbumList,
   createAlbum,
@@ -271,12 +270,16 @@ export default {
     debouncedHandleFileChange: null, // 初始化为空
     handleFileChange(file, fileList) {
       const uniqueFiles = fileList.filter((newFile) => {
+        if (!newFile.raw) {
+          console.warn("newFile.raw is undefined:", newFile);
+          return false;
+        }
+
         return !this.albumImages.some(
           (existingUrl) => existingUrl === newFile.raw.name
         );
       });
 
-      // 上传每个唯一文件
       uniqueFiles.forEach(async (uniqueFile) => {
         await this.uploadFile(uniqueFile);
       });
@@ -305,5 +308,4 @@ export default {
     this.debouncedHandleFileChange = this.debounce(this.handleFileChange, 300);
   },
 };
-
 </script>

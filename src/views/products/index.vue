@@ -73,7 +73,22 @@
     <el-dialog :visible.sync="dialogVisible" title="产品管理">
       <el-form :model="currentProduct" label-width="80px">
         <el-form-item label="品牌">
-          <el-select v-model="currentProduct.brandCode" placeholder="选择品牌">
+          <!-- <el-select v-model="currentProduct.brandCode" placeholder="选择品牌">
+            <el-option
+              v-for="brand in brandList"
+              :key="brand.id"
+              :label="brand.name"
+              :value="brand.code"
+            />
+          </el-select> -->
+
+          <el-select
+            v-model="currentProduct.brandCode"
+            
+            filterable
+            placeholder="选择品牌"
+            style="width: 100%"
+          >
             <el-option
               v-for="brand in brandList"
               :key="brand.id"
@@ -114,7 +129,7 @@
         <el-form-item label="图片">
           <el-upload
             :file-list="fileList"
-            :auto-upload="true"
+            :auto-upload="false"
             action=""
             accept="image/*"
             :on-change="handleFileChange"
@@ -129,7 +144,7 @@
           >
             <div
               v-for="(picture, index) in uniquePictures"
-              :key="index"
+              :key="picture.key"
               style="
                 position: relative;
                 margin-right: 10px;
@@ -182,7 +197,7 @@ import {
   deleteProduct,
   uploadFile,
   getBrandList,
-  getCategoryPage
+  getCategoryPage,
 } from "@/utils/api";
 import { MessageBox } from "element-ui";
 
@@ -229,7 +244,6 @@ export default {
     this.fetchBrandList();
     this.fetchKeywordOptions(); // 获取关键词选项
     this.fetchCategoryOptions();
-
   },
   computed: {
     uniquePictures() {
@@ -240,25 +254,40 @@ export default {
       this.fileList.forEach((file) => {
         pictureSet.add(file.url || file);
       });
-      return Array.from(pictureSet).map((url) => ({ url }));
+
+      return Array.from(pictureSet).map((url, index) => ({ url, key: index }));
     },
   },
   methods: {
     async fetchCategoryOptions() {
-    const response = await getCategoryPage({
-      pageNo: 1,
-      pageSize: 1000,
-      condition: { name: "" },
-    });
-    this.categoryOptions = response.data.records;
-  },
-    async fetchBrandList() {
-      const response = await getBrandList({
+      const response = await getCategoryPage({
         pageNo: 1,
-        pageSize: 20,
-        title: "",
+        pageSize: 1000,
+        condition: { name: "" },
       });
-      this.brandList = response.data.records;
+      this.categoryOptions = response.data.records;
+    },
+    async fetchBrandList() {
+      const pageNo = "";
+      const pageSize = 999;
+      const title = "";
+
+      async function fetchBrandListRecursive(pageNo) {
+        const response = await getBrandList({
+          pageNo,
+          pageSize,
+          title,
+        });
+        this.brandList.push(...response.data.records);
+
+        if (response.data.total > this.brandList.length) {
+          await fetchBrandListRecursive("");
+        }
+      }
+
+      this.brandList = [];
+      const self = this;
+      fetchBrandListRecursive.call(self, pageNo);
     },
     async fetchKeywordOptions() {
       // 假设你有一个 API 来获取关键词选项
@@ -343,15 +372,26 @@ export default {
       this.fetchProductList();
     },
     async handleFileChange(file, fileList) {
+      console.log("文件列表更新前:", this.fileList);
+
       const newFiles = fileList.filter(
         (f) => !this.fileList.some((existingFile) => existingFile.url === f.url)
       );
+
+      console.log("新增文件:", newFiles);
+
       this.fileList.push(...newFiles);
     },
     async uploadFile(fileData) {
       try {
         const uploadedFile = await uploadFile(fileData.file);
-        this.fileList.push(uploadedFile);
+
+        // 检查是否已存在相同的文件
+        if (!this.fileList.some((file) => file.url === uploadedFile.url)) {
+          this.fileList.push(uploadedFile);
+        } else {
+          console.warn("文件已存在，跳过:", uploadedFile.url);
+        }
       } catch (error) {
         console.error("图片上传失败:", error);
       }
