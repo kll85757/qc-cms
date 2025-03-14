@@ -120,16 +120,14 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="标题">
-            <el-input v-model="currentProduct.title" />
-          </el-form-item>
+          
           <!-- 其他字段省略 -->
         </el-form>
 
         <el-form-item label="图片">
           <el-upload
             :file-list="fileList"
-            :auto-upload="false"
+            :auto-upload="true"
             action=""
             accept="image/*"
             :on-change="handleFileChange"
@@ -144,7 +142,7 @@
           >
             <div
               v-for="(picture, index) in uniquePictures"
-              :key="picture.key"
+              :key="index"
               style="
                 position: relative;
                 margin-right: 10px;
